@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns:mvc="http://www.springframework.org/schema/mvc" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.springframework.org/schema/beans"
+    xsi:schemaLocation="
+        http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc-3.0.xsd
+        http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
+    <bean id="hadoopUgiService" class="com.lenovo.lps.farseer.priest2.platform.service.impl.HadoopUgiServiceImpl" />
+
+    <bean name="sqoopService" class="com.lenovo.lps.farseer.priest2.platform.service.impl.SqoopServiceImpl" />
+
+    <bean name="httpClient" class="com.lenovo.lps.farseer.priest2.platform.service.impl.HttpClientImpl" />
+
+    <bean name="jobKillerService" class="com.lenovo.lps.farseer.priest2.platform.service.impl.JobKillerServiceImpl" />
+ 
+    <bean name="processDrawService" class="com.lenovo.lps.farseer.priest2.platform.service.impl.ProcessDrawServiceImpl" />  
+
+    <bean name="httpConnectionManager" class="com.lenovo.lps.farseer.priest2.platform.service.impl.HttpConnectionManagerImpl">
+        <constructor-arg name="maxTotalConnections" value="200" />
+        <constructor-arg name="waitTimeout" value="60000" />
+        <constructor-arg name="maxRouteConnections" value="100" />
+        <constructor-arg name="connectTimeout" value="10000" />
+        <constructor-arg name="httpPort" value="80" />
+        <constructor-arg name="sslPort" value="443" />
+        <!-- 使用系统默认代理（供测试用） -->
+        <constructor-arg name="isProxy" value="false" />
+        <constructor-arg name="proxyIp" value="10.99.60.201" />
+        <constructor-arg name="proxyPort" value="8080" />
+        <constructor-arg name="userName" value="" />
+        <constructor-arg name="password" value="" />
+    </bean>
+    
+    <bean name="HiveService" class="com.lenovo.lps.farseer.priest2.platform.hive.impl.HiveServiceImpl" />  
+    <bean name="sparkJdbcService" class="com.lenovo.lps.farseer.priest2.platform.service.impl.SparkJdbcServiceImpl" />  
+    <bean name="mapReduceService" class="com.lenovo.lps.farseer.priest2.platform.service.impl.MapReduceServiceImpl" />  
+    <bean name="sparkJarService" class="com.lenovo.lps.farseer.priest2.platform.service.impl.SparkJarServiceImpl" />  
+    
+    <bean id="applicationService" class="com.lenovo.lps.farseer.priest2.platform.service.impl.ApplicationServiceImpl" />
+</beans>

@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>    
+<!DOCTYPE log4j:configuration SYSTEM "log4j.dtd">
+
+<log4j:configuration xmlns:log4j='http://jakarta.apache.org/log4j/'>
+    <appender name="Console" class="org.apache.log4j.ConsoleAppender">
+        <layout class="org.apache.log4j.PatternLayout">
+            <param name="ConversionPattern" value="%d (%-4r ms) %-5p [%t] %c %x: %m%n" />
+        </layout>
+    </appender>
+
+    <appender name="AuditLogFile" class="org.apache.log4j.RollingFileAppender">
+        <param name="File" value="/var/lib/priest/logs/audit.log" />
+        <param name="MaxFileSize" value="20mb" />
+        <param name="maxBackupIndex" value="10" />
+        <layout class="org.apache.log4j.PatternLayout">
+            <param name="ConversionPattern" value="%d (%-4r ms) %-5p [%t] %c %x: %m%n" />
+        </layout>
+    </appender>
+    <appender name="LogFile" class="org.apache.log4j.RollingFileAppender">
+        <param name="File" value="/var/lib/priest/logs/priest.log" />
+        <param name="MaxFileSize" value="20mb" />
+        <param name="maxBackupIndex" value="10" />
+        <layout class="org.apache.log4j.PatternLayout">
+            <param name="ConversionPattern" value="%d (%-4r ms) %-5p [%t] %c %x: %m%n" />
+        </layout>
+    </appender>
+    
+    <appender name="notifyFile" class="org.apache.log4j.RollingFileAppender">
+        <param name="File" value="/var/lib/priest/logs/notify.log" />
+        <param name="MaxFileSize" value="20mb" />
+        <param name="maxBackupIndex" value="10" />
+        <layout class="org.apache.log4j.PatternLayout">
+            <param name="ConversionPattern" value="%d (%-4r ms) %-5p [%t] %c %x: %m%n" />
+        </layout>
+    </appender>    
+    <logger name="com.lenovo.lps.farseer.priest2.common.util.AuditLog" additivity="false">
+        <level value="info" />
+        <appender-ref ref="AuditLogFile" />
+        <appender-ref ref="Console" />
+    </logger>
+    <logger name="com.lenovo" additivity="false">
+        <level value="warn" />
+        <appender-ref ref="LogFile" />
+        <appender-ref ref="Console" />
+    </logger>
+    <logger name="org.springframework" additivity="false">
+        <level value="warn" />
+        <appender-ref ref="LogFile" />
+        <appender-ref ref="Console" />
+    </logger>
+    <logger name="org.apache" additivity="false">
+        <level value="warn" />
+        <appender-ref ref="LogFile" />
+        <appender-ref ref="Console" />
+    </logger>
+	<logger name="hive.ql.parse.ParseDriver" additivity="false">
+		<level value="error" />
+		<appender-ref ref="Console" />
+	</logger>
+	<logger name="org.apache.hive.ql.parse.ParseDriver" additivity="false">
+		<level value="error" />
+		<appender-ref ref="Console" />
+	</logger>    
+    <category name="java.sql">
+        <priority value="warn" />
+    </category>
+    <category name="com.ibatis">
+        <priority value="warn" />
+    </category> 
+    <logger name="priest.notification" additivity="false">
+        <level value="error" />
+        <appender-ref ref="notifyFile" />
+    </logger>       
+    <root>
+        <level value="warn" />
+        <appender-ref ref="LogFile" />
+        <appender-ref ref="Console" />
+    </root>
+</log4j:configuration>

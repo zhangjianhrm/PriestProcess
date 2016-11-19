@@ -1,0 +1,535 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.lenovo.lps.farseer.priest2.platform.mapper.ProcessMapper">
+    <sql id="searchWhereCondition">
+        <trim prefix="WHERE" prefixOverrides="AND|OR"> 
+        	<if test="processId != null and processId!=''">
+        	    AND process_id = #{processId}
+        	</if>
+        	<if test="processName != null and processName !=''">
+	        	AND	PROCESS_NAME LIKE #{processName}
+        	</if>
+        	<if test="processApp != null and processApp != ''">
+        		AND PROCESS_APP = #{processApp}
+        	</if>
+        	<if test="processState != null and processState != ''">
+        		AND PROCESS_STATE = #{processState}
+        	</if>
+        	<if test="createdDateStart != null and createdDateStart != '' ">
+                <if test="createdDateEnd != null and createdDateEnd !='' " >
+                    AND CREATED_DATE BETWEEN str_to_date(#{createdDateStart},'%Y-%m-%d') AND str_to_date(#{createdDateEnd},'%Y-%m-%d')
+                </if>
+            </if>
+        	<if test="createdBy != null and createdBy !=''">
+        		AND created_by = #{createdBy}
+        	</if> 
+        	<if test="processType != null and processApp != ''">
+        		AND processRun.PROCESS_TYPE = #{processType}
+        	</if> 
+        	<if test="execDate != null and execDate != ''">
+        		AND processRun.EXEC_DATE = STR_TO_DATE(#{execDate}, '%Y-%m-%d')
+        	</if>          
+        </trim>
+    </sql>
+    <sql id="computeRunTime">
+        run_time=timestampdiff(second, start_time, end_time)
+    </sql>
+    <resultMap type="com.lenovo.lps.farseer.priest2.platform.entity.ProcessEntity" id="processDefMap">
+        <id column="PROCESS_ID" property="processId" jdbcType="INTEGER" javaType="Integer"/>
+        <result column="PROCESS_NAME" property="processName" jdbcType="VARCHAR" javaType="String"/>
+        <result column="PROCESS_DESC" property="processDesc"/>
+        <result column="VALID_DATE" property="validDate" jdbcType="DATE" javaType="String"/>
+        <result column="PROCESS_PRIORITY" property="processPriority" jdbcType="CHAR" javaType="String"/>
+        <result column="PROCESS_APP" property="processApp" jdbcType="VARCHAR" javaType="String"/>
+        <result column="SCHEDULE_TYPE" property="scheduleType" jdbcType="CHAR" javaType="String"/>
+        <result column="SCHEDULE_DATE" property="scheduleDate" jdbcType="DATE" javaType="String"/>
+        <result column="SCHEDULE_TIME" property="scheduleTime" jdbcType="TIME" javaType="String"/>
+        <result column="LATEST_SCHEDULE_TIME" property="latestScheduleTime" jdbcType="TIME" javaType="String"/>
+        <result column="ALARM_TYPE" property="alarmType" jdbcType="CHAR" javaType="String"/>
+        <result column="ALARM_TARGET" property="alarmTarget"/>
+        <result column="BPMN_DEF" property="bpmnDef" jdbcType="VARCHAR" javaType="String"/>
+        <result column="JSON_DEF" property="jsonDef" jdbcType="VARCHAR" javaType="String"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="VARCHAR" javaType="String"/>
+        <result column="CREATED_DATE" property="createdDate" jdbcType="TIMESTAMP" javaType="String"/>
+        <result column="UPDATED_BY" property="updatedBy" jdbcType="VARCHAR" javaType="String"/>
+        <result column="UPDATED_DATE" property="updatedDate" jdbcType="TIMESTAMP" javaType="String"/>
+        <result column="PROCESS_STATE" property="processState" jdbcType="CHAR" javaType="String"/>
+        <result column="PROCESS_VARIABLES" property="processVariables" jdbcType="VARCHAR" javaType="String"/>
+        <result column="INVESTIGATION_RESULT" property="investigationResult" jdbcType="VARCHAR" javaType="String"/>
+    </resultMap>
+    <resultMap type="com.lenovo.lps.farseer.priest2.platform.entity.ProcessEntity" id="processRunMap">
+        <id column="PROCESS_ID" property="processId" jdbcType="INTEGER" javaType="Integer"/>
+        <result column="PROCESS_NAME" property="processName" jdbcType="VARCHAR" javaType="String"/>
+        <result column="EXEC_DATE" property="execDate" jdbcType="DATE" javaType="String"/>
+        <result column="START_TIME" property="startTime" jdbcType="DATE" javaType="String"/>
+        <result column="END_TIME" property="endTime" jdbcType="DATE" javaType="String"/>
+        <result column="RUN_TIME" property="runTime" jdbcType="INTEGER" javaType="Integer"/>
+        <result column="MESSAGE" property="message"/>
+        <result column="PROCESS_STATUS" property="processStatus" jdbcType="CHAR" javaType="String"/>
+        <result column="REMEDY_TIMES" property="remedyTimes" jdbcType="INTEGER" javaType="int"/>
+        <result column="LATEST_SCHEDULE_TIME" property="latestScheduleTime" jdbcType="TIME" javaType="String"/>
+        <result column="SCHEDULE_DATE" property="scheduleDate" jdbcType="DATE" javaType="String"/>
+        <result column="SCHEDULE_TIME" property="scheduleTime" jdbcType="TIME" javaType="String"/> 
+        <result column="PROCESS_PRIORITY" property="processPriority" jdbcType="CHAR" javaType="String"/>
+        <result column="BPMN_DEF" property="bpmnDef" jdbcType="VARCHAR" javaType="String"/> 
+        <result column="PROCESS_VARIABLES" property="processVariables" jdbcType="VARCHAR" javaType="String"/>
+        <result column="PROCESS_APP" property="processApp" jdbcType="VARCHAR" javaType="String"/>
+        <result column="CREATED_BY" property="createdBy" jdbcType="VARCHAR" javaType="String"/>
+        <result column="PROCESS_TYPE" property="processType" jdbcType="CHAR" javaType="String"/>
+    </resultMap>
+    <!-- count apps -->
+	<insert id="insertProcess" parameterType="com.lenovo.lps.farseer.priest2.platform.entity.ProcessEntity">
+		INSERT INTO P_PROCESS_DEF
+		  (process_id,
+		   process_name,
+		   process_desc,
+		   valid_date,
+		   process_priority,
+		   process_app,
+		   schedule_type,
+		   schedule_date,
+		   schedule_time,
+		 <if test="latestScheduleTime != null">
+		   latest_schedule_time,
+		 </if>
+		   alarm_type,
+		   alarm_target,
+		   bpmn_def,
+		   json_def,
+		   process_variables,
+		   process_state,
+		   created_by,
+		   created_date,
+		   updated_by,
+		   updated_date)
+		VALUES
+		  (#{processId},
+		   #{processName},
+		   #{processDesc},
+		   STR_TO_DATE(#{validDate}, '%Y-%m-%d'),
+		   #{processPriority},
+		   #{processApp},
+		   #{scheduleType},
+		   STR_TO_DATE(#{scheduleDate}, '%Y-%m-%d'),
+		   TIME_FORMAT(#{scheduleTime},'%H:%i:%s'),
+		 <if test="latestScheduleTime != null">
+		   TIME_FORMAT(#{latestScheduleTime},'%H:%i:%s'),
+		 </if>
+		   #{alarmType},
+		   #{alarmTarget},
+		   #{bpmnDef},
+		   #{jsonDef},
+		   #{processVariables},
+		   #{processState},
+		   #{createdBy},
+		   now(),
+		   #{createdBy},
+		   now())
+	</insert>
+    
+    <select id="searchProcessDefCount" parameterType="com.lenovo.lps.farseer.priest2.platform.entity.ProcessEntity" resultType="java.lang.Long">
+        SELECT COUNT(*) FROM P_PROCESS_DEF
+        <include refid="searchWhereCondition"/>
+    </select>
+    
+    <select id="searchProcessDef" parameterType="com.lenovo.lps.farseer.priest2.platform.entity.ProcessEntity" resultMap="processDefMap">
+        SELECT * FROM P_PROCESS_DEF
+        <include refid="searchWhereCondition"/>
+        <if test="sidx != null and sidx!=''  ">
+            ORDER BY ${sidx}
+            <if test="sord != null and sord!=''">
+                ${sord}
+            </if>
+        </if>
+        <if test="offset != null and offset >= 0">
+            LIMIT #{offset}, #{rows}
+        </if>       
+    </select>
+    
+    <select id="searchProcessDefByModifyDate" parameterType="com.lenovo.lps.farseer.priest2.platform.entity.ProcessEntity" resultMap="processDefMap">
+    	SELECT * FROM P_PROCESS_DEF WHERE TIMESTAMPDIFF(SECOND,#{updatedDate},updated_date) > 0
+    </select>
+
+    <select id="searchProcessRunById" parameterType="java.util.Map" resultMap="processRunMap">
+        SELECT * FROM P_PROCESS_RUN WHERE PROCESS_ID = #{processId}
+        <if test="null != processStatus">
+            AND PROCESS_STATUS = #{processStatus}
+        </if>
+    </select>
+
+    <select id="searchProcessRunByIdExecDate" parameterType="java.util.Map"  resultMap="processRunMap">
+        SELECT * FROM P_PROCESS_RUN WHERE PROCESS_ID = #{processId} AND EXEC_DATE=STR_TO_DATE(#{execDate}, '%Y-%m-%d')
+    </select>
+    
+    <select id="searchProcessRunHistory" parameterType="java.util.Map"  resultMap="processRunMap">
+        SELECT SCHEDULE_DATE,start_time, end_time, RUN_TIME FROM P_PROCESS_RUN 
+         WHERE PROCESS_ID = #{processId} 
+           AND SCHEDULE_DATE >= STR_TO_DATE(#{beginDate}, '%Y-%m-%d')
+           AND SCHEDULE_DATE &lt;= STR_TO_DATE(#{endDate}, '%Y-%m-%d')
+      ORDER BY SCHEDULE_DATE DESC
+    </select>
+
+    <delete id="deleteProcessDefById" parameterType="java.lang.String">
+        DELETE FROM P_PROCESS_DEF WHERE PROCESS_ID = #{processId}
+    </delete>
+    
+    <delete id="deleteProcessRun" parameterType="java.util.Map">
+        DELETE FROM P_PROCESS_RUN WHERE PROCESS_ID = #{processId}
+        <if test="execDate != null">
+            AND exec_date = STR_TO_DATE(#{execDate}, '%Y-%m-%d')
+        </if>
+    </delete>
+    
+	<update id="updateProcess" parameterType="com.lenovo.lps.farseer.priest2.platform.entity.ProcessEntity">
+	    UPDATE P_PROCESS_DEF
+	       SET process_name         = #{processName},
+	           process_desc         = #{processDesc},
+	           valid_date           = STR_TO_DATE(#{validDate}, '%Y-%m-%d'),
+	           process_priority     = #{processPriority},
+	           process_app          = #{processApp},
+	           schedule_type        = #{scheduleType},
+	           schedule_date        = STR_TO_DATE(#{scheduleDate}, '%Y-%m-%d'),
+	           schedule_time        = TIME_FORMAT(#{scheduleTime}, '%H:%i:%s'),
+	           latest_schedule_time = TIME_FORMAT(#{latestScheduleTime},
+	                                              '%H:%i:%s'),
+	           alarm_type           = #{alarmType},
+	           alarm_target         = #{alarmTarget},
+	           bpmn_def             = #{bpmnDef},
+	           json_def             = #{jsonDef},
+	           process_variables    = #{processVariables},
+	           process_state        = #{processState},
+	           updated_by           = #{updatedBy},
+	           updated_date         = now()
+	     WHERE process_id = #{processId}
+	</update>   
+	
+    <update id="updateProcessState" parameterType="java.util.Map" >
+        UPDATE P_PROCESS_DEF
+           SET process_state=#{processState},
+	           updated_by           = #{updatedBy},
+	           updated_date         = now(),
+	           schedule_date        = ifnull(STR_TO_DATE(#{scheduleDate}, '%Y-%m-%d'),schedule_date)         
+         WHERE process_id = #{processId}
+    </update>
+    
+    <update id="validateProcess" parameterType="java.util.Map" >
+        UPDATE P_PROCESS_DEF
+           SET process_state = #{processState},
+	           investigation_result = #{investigationResult},
+	           updated_date = now()
+         WHERE process_id = #{processId}
+    </update>	 
+    
+	<insert id="startProcess" parameterType="java.util.Map">
+		UPDATE P_PROCESS_RUN
+		   SET process_status='R',
+		       start_time=now(),
+		       process_variables=#{processVariables}
+		 WHERE process_id=#{processId}
+		   AND exec_date=STR_TO_DATE(#{execDate}, '%Y-%m-%d')	   
+	</insert>
+	
+	<update id="terminateProcess" parameterType="java.util.Map">
+		UPDATE P_PROCESS_RUN
+		   SET process_status='S',
+		       end_time=now(),
+		       <include refid="computeRunTime" />,
+		       message=IF(REMEDY_TIMES>0,MESSAGE,NULL)
+		 WHERE process_id=#{processId}
+		   AND exec_date=STR_TO_DATE(#{execDate}, '%Y-%m-%d')
+	</update> 
+	
+	<update id="failedProcess" parameterType="java.util.Map">
+		UPDATE P_PROCESS_RUN
+		   SET process_status='F',
+		   	   end_time=now(),
+		   	   <include refid="computeRunTime" />,
+		       message=#{detail}
+		 WHERE process_id=#{processId}
+		  AND exec_date=STR_TO_DATE(#{execDate}, '%Y-%m-%d')
+	</update> 	
+	
+	<update id="failedWaitProcess" parameterType="java.util.Map">
+		UPDATE P_PROCESS_RUN
+		   SET process_status='F',
+		       message=#{detail}
+		 WHERE process_id=#{processId}
+		  AND exec_date=STR_TO_DATE(#{execDate}, '%Y-%m-%d')
+		  AND process_status = 'W'
+	</update> 	
+	
+    <select id="getValidProcess" resultMap="processDefMap" parameterType="java.lang.String">
+		SELECT
+		    *
+		FROM
+		    P_PROCESS_DEF a
+		WHERE
+		    a.process_state = 'N'
+		AND  DATEDIFF(a.valid_date, str_to_date(#{scheduleDate},'%Y-%m-%d'))>= 0
+    </select>  
+    
+	<insert id="batchInsertRun" parameterType="java.util.List">
+		INSERT INTO P_PROCESS_RUN
+		  (process_id,
+		   exec_date,
+		   start_time,
+		   process_status,
+		   schedule_time,
+		   latest_schedule_time,
+		   process_priority,
+		   process_name,
+		   bpmn_def,
+		   process_variables,
+		   schedule_date,
+		   created_by,
+		   created_date,
+		   process_app,
+		   process_type)
+		VALUES
+	    <foreach collection="list" item="parm" index="index" open="" close="" separator=",">
+		  (#{parm.processId},
+		   STR_TO_DATE(#{parm.execDate}, '%Y-%m-%d'),
+		   null,
+		   <if test="parm.processStatus == null">
+		   'W',
+		   </if>
+		   <if test="parm.processStatus != null">
+		   #{parm.processStatus},
+		   </if>
+		   TIME_FORMAT(#{parm.scheduleTime},'%H:%i:%s'),
+		 <if test="parm.latestScheduleTime != null">
+		   TIME_FORMAT(#{parm.latestScheduleTime},'%H:%i:%s'),
+		 </if>	
+		 <if test="parm.latestScheduleTime == null">
+		   null,
+		 </if>	
+		 #{parm.processPriority},
+		 #{parm.processName},
+		 #{parm.bpmnDef},
+		 #{parm.processVariables},
+		 #{parm.scheduleDate},
+		 #{parm.createdBy},   
+		 now(),
+		 #{parm.processApp},
+		 <if test="parm.processType == null">
+		   'N'
+		 </if>	
+		 <if test="parm.processType != null">
+		   #{parm.processType}
+		 </if>
+		  )
+	    </foreach>		
+	</insert>  
+	
+    <!-- select id="getProcessRun" parameterType="java.util.Map" resultMap="processRunMap">
+        SELECT * FROM P_PROCESS_RUN process WHERE 1=1
+		 <if test="processStatus != null and processStatus != ''">
+		   and PROCESS_STATUS = #{processStatus}
+			 <if test='processStatus == "W"'>
+	        <![CDATA[ and TIMEDIFF(SCHEDULE_TIME,str_to_date(#{time},'%H:%i:%s')) <= 0  ]]>  
+			 </if>		   
+		 </if>         
+		 <if test="execDate != null and execDate != ''">
+		   and exec_date=STR_TO_DATE(#{execDate}, '%Y-%m-%d')
+		 </if>
+		 <if test="scheduleDate != null and scheduleDate!=''">
+		   and schedule_date=STR_TO_DATE(#{scheduleDate}, '%Y-%m-%d')
+		 </if>
+		   and not exists (
+				SELECT
+					1
+				FROM
+					P_PROCESS_DEP dep
+				JOIN(
+					SELECT
+						*
+					FROM
+						P_PROCESS_RUN
+					WHERE
+						schedule_date = STR_TO_DATE(#{scheduleDate}, '%Y-%m-%d')
+					AND PROCESS_STATUS != 'S'
+					AND PROCESS_STATUS != 'H'
+				)dep_process ON dep.dependent_process_id = dep_process.PROCESS_ID
+			WHERE
+				dep.process_id = process.PROCESS_ID	
+			AND dep_process.exec_date=process.EXEC_DATE   
+		   )			 	 
+         order by SCHEDULE_TIME
+    </select-->
+    
+	<select id="getProcessRun" parameterType="java.util.Map" resultMap="processRunMap">
+        SELECT * FROM P_PROCESS_RUN process WHERE 1=1
+		   and PROCESS_STATUS = 'W'
+	        <![CDATA[ and TIMEDIFF(SCHEDULE_TIME,str_to_date(#{time},'%H:%i:%s')) <= 0  ]]>  
+		 <if test="execDate != null and execDate != ''">
+		   and exec_date=STR_TO_DATE(#{execDate}, '%Y-%m-%d')
+		 </if>
+		 <if test="scheduleDate != null and scheduleDate!=''">
+		   and schedule_date=STR_TO_DATE(#{scheduleDate}, '%Y-%m-%d')
+		 </if>
+		   and not exists (
+			SELECT
+				1
+			FROM
+				P_PROCESS_DEP dep
+			WHERE
+				dep.process_id = process.PROCESS_ID
+		   )	 	 
+         order by SCHEDULE_TIME
+    </select>
+    
+	<update id="updateScheduleDate" parameterType="com.lenovo.lps.farseer.priest2.platform.entity.ProcessEntity">
+		UPDATE P_PROCESS_DEF
+		   SET schedule_date=STR_TO_DATE(#{scheduleDate}, '%Y-%m-%d')
+		 WHERE process_id=#{processId}
+	</update>
+	
+    <select id="getScheduleDelayedProcess" parameterType="java.lang.String" resultMap="processRunMap">
+		SELECT
+		    *
+		FROM
+		    P_PROCESS_RUN a
+		WHERE
+		    (a.PROCESS_STATUS = 'W' OR a.PROCESS_STATUS = 'Q')
+		AND a.schedule_date = STR_TO_DATE(#{scheduleDate}, '%Y-%m-%d')
+		AND a.LATEST_SCHEDULE_TIME IS NOT NULL
+      <![CDATA[ 		
+		AND TIMEDIFF(
+		    LATEST_SCHEDULE_TIME,
+		    CURRENT_TIME()
+		)<= 0
+	  ]]>
+        AND NOT EXISTS (
+			SELECT
+				1
+			FROM
+				P_PROCESS_DEP dep
+			WHERE
+				dep.process_id = a.PROCESS_ID
+		   )	  
+    </select>	
+    
+	<update id="abortProcess" parameterType="java.util.Map">
+		UPDATE P_PROCESS_RUN
+		   SET process_status='C',
+		       end_time=now(),
+		       <include refid="computeRunTime" />,
+		       message=null
+		 WHERE process_id=#{processId}
+		   AND exec_date=STR_TO_DATE(#{execDate}, '%Y-%m-%d')
+	</update>   
+	
+	<update id="updateRunningProcessVariable" parameterType="java.util.Map">
+		UPDATE P_PROCESS_RUN
+		   SET process_variables=#{processVariable}
+		 WHERE process_id=#{processId}
+		   AND exec_date=STR_TO_DATE(#{execDate}, '%Y-%m-%d')
+	</update> 	
+	
+	<update id="updateExpiredProcessRun" parameterType="java.lang.String">
+		UPDATE P_PROCESS_RUN
+		   SET process_status='F',
+		       message='Expired for 8 hours'
+		 WHERE schedule_date = STR_TO_DATE(#{scheduleDate}, '%Y-%m-%d')
+		   AND process_status='W'
+     <![CDATA[ AND time_to_sec(TIMEDIFF(CURRENT_TIME,SCHEDULE_TIME)) >=28800  ]]>  
+	</update>	
+	
+	<update id="updateProcessRun" parameterType="com.lenovo.lps.farseer.priest2.platform.entity.ProcessEntity">
+		UPDATE P_PROCESS_RUN
+	       SET message         = #{message},
+	       	   process_status  = #{processStatus},
+	       	   process_type    = #{processType},
+	       	   start_time      = #{startTime},
+	       	   end_time        = #{endTime},
+	       	   run_time        = null,
+			   remedy_times    = #{remedyTimes},
+			   schedule_time   = ifnull(TIME_FORMAT(#{scheduleTime},'%H:%i:%s'),schedule_time),
+			   schedule_date   = ifnull(STR_TO_DATE(#{scheduleDate}, '%Y-%m-%d'),schedule_date)
+	     WHERE process_id = #{processId}
+	       AND exec_date=STR_TO_DATE(#{execDate}, '%Y-%m-%d')
+	</update>
+	
+	<update id="updateProcessStatus" parameterType="com.lenovo.lps.farseer.priest2.platform.entity.ProcessEntity">
+		UPDATE P_PROCESS_RUN
+	       SET process_status  = #{processStatus}
+	     WHERE process_id = #{processId}
+	       AND exec_date=STR_TO_DATE(#{execDate}, '%Y-%m-%d')
+	</update>
+	
+	<update id="historyProcess" parameterType="com.lenovo.lps.farseer.priest2.platform.entity.ProcessEntity">
+		UPDATE P_PROCESS_RUN
+	       SET process_status  = 'Q'
+	     WHERE process_id = #{processId}
+	       AND exec_date=STR_TO_DATE(#{execDate}, '%Y-%m-%d')
+	       AND process_status = 'H'
+	</update>
+	
+	<update id="historyCancelProcess" parameterType="com.lenovo.lps.farseer.priest2.platform.entity.ProcessEntity">
+		UPDATE P_PROCESS_RUN
+	       SET process_status  = 'C'
+	     WHERE process_id = #{processId}
+	       AND exec_date=STR_TO_DATE(#{execDate}, '%Y-%m-%d')
+	       AND process_status = 'H'
+	</update>
+	
+	<update id="pushProcess" parameterType="com.lenovo.lps.farseer.priest2.platform.entity.ProcessEntity">
+		UPDATE P_PROCESS_RUN
+	       SET process_status  = 'Q',
+	           process_type = ifnull(#{processType},process_type),
+	           remedy_times = ifnull(#{remedyTimes},remedy_times),
+	           start_time   = null,
+	       	   end_time     = null,
+	       	   run_time     = null
+	     WHERE process_id = #{processId}
+	       AND exec_date=STR_TO_DATE(#{execDate}, '%Y-%m-%d')
+	       AND process_status != 'Q' AND process_status != 'R' AND !(process_status = 'F' AND message like '%Cancel by %')
+	</update>
+	
+	<update id="failedHistoryRunning" >
+		update P_PROCESS_RUN 
+   		   set PROCESS_STATUS = 'F', MESSAGE='priest shutdown'
+         where PROCESS_STATUS = 'H' and process_type = 'H'
+	</update>
+	
+	<update id="failedHistoryPro"  parameterType="java.util.Map">
+		update P_PROCESS_RUN 
+   		   set PROCESS_STATUS = 'F', MESSAGE=#{msg}
+         where PROCESS_STATUS in('W', 'Q', 'R', 'H') and process_type = 'H'
+         		and process_id = #{processId} and exec_date=STR_TO_DATE(#{execDate}, '%Y-%m-%d')
+	</update>
+	
+	<select id="checkHistoryPro"  parameterType="map" resultType="int">
+		select count(1) from P_PROCESS_RUN where process_type = 'H'
+         		and process_id = #{processId} and exec_date=STR_TO_DATE(#{execDate}, '%Y-%m-%d')
+	</select>
+	
+	<select id="getAlarmPhones"  parameterType="map" resultType="String">
+		select target from P_SYS_CONFIG
+			where type = 4
+		  limit 1
+	</select>
+	
+	<select id="getTaskType"  parameterType="map" resultType="map">
+		select task_id taskId, task_type taskType from P_TASK_RUN
+			where process_id = #{processId} and exec_date = #{execDate} and TASK_STATUS = 'R'
+		  limit 1
+	</select>
+	
+	<update id="failedRunningProcess" >
+		update P_PROCESS_RUN 
+   		   set PROCESS_STATUS = 'F', MESSAGE='priest shutdown'
+         where exec_date=DATE_ADD(CURRENT_DATE(),INTERVAL -1 day)
+           and PROCESS_STATUS in ('R','Q')
+	</update>
+	
+	<insert id="sqlGenTaskId"  useGeneratedKeys="true" keyProperty="task_id" 
+			parameterType="com.lenovo.lps.farseer.priest2.common.entity.IdGen">
+		insert into P_TASK_ID_GEN(task_id) values(null)
+	</insert>
+	
+	<insert id="sqlGenProcessId" useGeneratedKeys="true" keyProperty="process_id" 
+			parameterType="com.lenovo.lps.farseer.priest2.common.entity.IdGen">
+		insert into P_PROCESS_ID_GEN(process_id) values(null)
+	</insert>
+</mapper>

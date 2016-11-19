@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:aop="http://www.springframework.org/schema/aop"
+    xmlns:tx="http://www.springframework.org/schema/tx"
+    xmlns:context="http://www.springframework.org/schema/context"
+    xsi:schemaLocation="http://www.springframework.org/schema/beans 
+        http://www.springframework.org/schema/beans/spring-beans-2.5.xsd
+        http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
+        http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-3.0.xsd
+        http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-3.0.xsd">
+   <context:annotation-config/>        
+    <bean id="propertyConfigurer" class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+        <property name="locations">
+            <list>
+                <value>classpath:db-config.properties</value>
+            </list>
+        </property>
+        <property name="systemPropertiesModeName" value="SYSTEM_PROPERTIES_MODE_FALLBACK" />
+    </bean>
+    <bean id="jobMySqlJdbcTemplate" class="org.springframework.jdbc.core.JdbcTemplate">
+        <property name="dataSource" ref="platformMySqlDataSource" />
+    </bean>
+
+	<bean id="commonDataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource" destroy-method="close" abstract="true">
+	 	 <property name="initialPoolSize" value="6" />
+        <property name="minPoolSize" value="3" />
+        <property name="maxPoolSize" value="16" />
+        <property name="acquireIncrement" value="3" />
+        <property name="maxIdleTime" value="600" />
+        <property name="idleConnectionTestPeriod" value="900" />
+        <property name="preferredTestQuery" value="select 1" />
+        <property name="testConnectionOnCheckout" value="true" />
+        <property name="testConnectionOnCheckin" value="false" />
+        <property name="maxStatementsPerConnection" value="15" />
+        <property name="numHelperThreads" value="6" />
+        <property name="acquireRetryAttempts" value="30" />
+        <property name="checkoutTimeout" value="30000" />
+        <property name="autoCommitOnClose" value="false" />
+	</bean>
+	
+    <bean id="platformMySqlDataSource" parent="commonDataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource" destroy-method="close">
+        <property name="driverClass" value="${job.database.driver}" />
+        <property name="jdbcUrl" value="${job.database.url}" />
+        <property name="user" value="${job.database.username}" />
+        <property name="password" value="${job.database.password}" />
+    </bean>
+    
+    <!-- 动态数据源 -->
+    <bean id="dynamicDataSource" class="com.lenovo.lps.farseer.priest2.platform.mapper.DynamicDataSource">
+    	<property name="targetDataSources">
+    		<map key-type="java.lang.String">
+    			<entry key="main" value-ref="platformMySqlDataSource"/>
+    		</map>
+    	</property>
+    	<property name="defaultTargetDataSource" ref="platformMySqlDataSource" />
+    </bean>
+
+    <!-- 配置SqlSessionFactoryBean -->
+    <bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+        <property name="dataSource" ref="dynamicDataSource" />
+        <property name="configLocation" value="classpath:myibatis/Configuration.xml" />
+        <!-- mapper配置路径 -->
+        <property name="mapperLocations">
+            <list>
+                <value>classpath:myibatis/sql/mapper/*-mapper.xml</value>
+            </list>
+        </property>
+    </bean>
+
+    <!-- 通过扫描的模式，所有的mapper都继承SqlMapper接口的接口， 这样一个bean就可以了 -->
+    <bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+        <property name="basePackage" value="com.lenovo.lps.farseer.priest2.platform.mapper" />
+        <property name="markerInterface" value="com.lenovo.lps.farseer.priest2.platform.mapper.Mapper" />
+    </bean>
+    
+  <!-- enable the configuration of transactional behavior based on annotations -->
+  <tx:annotation-driven transaction-manager="transactionManager" />
+
+  <!-- a PlatformTransactionManager is still required -->
+  <bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+  	<property name="dataSource" ref="platformMySqlDataSource"/>
+  </bean>
+      
+  	    <!-- 读取配置文件 -->
+    <bean id="loginOropertyConfigurer" class="com.lenovo.lps.farseer.priest2.common.util.ConfigUtil">  
+        <property name="ignoreResourceNotFound" value="true" />  
+		<property name="location" value="classpath:process-config.properties" />
+    </bean>
+    <bean name="hiveMetaDao" class="com.lenovo.lps.farseer.priest2.platform.service.impl.HiveMetaDaoImpl" />
+    <bean name="idDao" class="com.lenovo.lps.farseer.priest2.platform.dal.impl.IdDaoImpl" />
+    <bean name="processDao" class="com.lenovo.lps.farseer.priest2.platform.dal.impl.ProcessDaoImpl" />
+    <bean name="taskDao" class="com.lenovo.lps.farseer.priest2.platform.dal.impl.TaskDaoImpl"/>
+    <bean name="applicationDao" class="com.lenovo.lps.farseer.priest2.platform.dal.impl.ApplicationDaoImpl" />
+    <bean name="lockDao" class="com.lenovo.lps.farseer.priest2.platform.dal.impl.LockDaoImpl" />
+    <bean name="processDepDao" class="com.lenovo.lps.farseer.priest2.platform.dal.impl.ProcessDepDaoImpl" />
+    <bean name="sqoopDao" class="com.lenovo.lps.farseer.priest2.platform.service.impl.SqoopDaoImpl" />
+	<bean name="threadPoolDao" class="com.lenovo.lps.farseer.priest2.platform.dal.impl.ThreadPoolDaoImpl" />
+	<bean name="cacheClient" class="com.lenovo.lps.farseer.priest2.platform.service.impl.CacheRedisClient" />
+    <bean id="redisSourceManager" class="com.lenovo.lps.farseer.priest2.platform.manager.RedisSourceManager" init-method="init"/>
+</beans>

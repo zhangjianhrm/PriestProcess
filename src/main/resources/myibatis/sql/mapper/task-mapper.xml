@@ -1,0 +1,223 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.lenovo.lps.farseer.priest2.platform.mapper.TaskMapper">
+    <sql id="computeRunTime">
+        run_time=timestampdiff(second, start_time, end_time)
+    </sql>
+    
+    <resultMap type="com.lenovo.lps.farseer.priest2.platform.entity.TaskEntity" id="taskDefMap">
+        <id column="TASK_ID" property="taskId" jdbcType="INTEGER" javaType="Integer" />
+        <result column="PROCESS_ID" property="processId" jdbcType="INTEGER" javaType="Integer" />
+        <result column="TASK_NAME" property="taskName" jdbcType="VARCHAR" javaType="String" />
+        <result column="TASK_STATUS" property="taskStatus" jdbcType="CHAR" javaType="String" />
+        <result column="TASK_TYPE" property="taskType" jdbcType="VARCHAR" javaType="String" />
+        <result column="EXEC_DATE" property="execDate" jdbcType="DATE" javaType="String" />
+        <result column="START_TIME" property="startTime" jdbcType="TIME" javaType="String" />
+        <result column="END_TIME" property="endTime" jdbcType="TIME" javaType="String" />
+        <result column="REMEDY_TIMES" property="remedyTimes" jdbcType="INTEGER" javaType="Integer" />
+        <result column="MESSAGE" property="message" />
+    </resultMap>
+    
+	<resultMap type="com.lenovo.lps.farseer.priest2.platform.entity.TaskOfProcessEntity" id="taskOfProcessDefMap">
+        <id column="TASK_ID" property="taskId" jdbcType="INTEGER" javaType="Integer" />
+        <result column="PROCESS_ID" property="processId" jdbcType="INTEGER" javaType="Integer" />
+        <result column="PROCESS_NAME" property="processName" jdbcType="VARCHAR" javaType="String" />
+        <result column="TASK_NAME" property="taskName" jdbcType="VARCHAR" javaType="String" />
+        <result column="TASK_STATUS" property="taskStatus" jdbcType="CHAR" javaType="String" />
+        <result column="TASK_TYPE" property="taskType" jdbcType="VARCHAR" javaType="String" />
+        <result column="EXEC_DATE" property="execDate" jdbcType="DATE" javaType="String" />
+        <result column="START_TIME" property="startTime" jdbcType="TIME" javaType="String" />
+        <result column="END_TIME" property="endTime" jdbcType="TIME" javaType="String" />
+        <result column="RUN_TIME" property="runTime" jdbcType="INTEGER" javaType="Integer"/>
+        <result column="REMEDY_TIMES" property="remedyTimes" jdbcType="INTEGER" javaType="Integer" />
+        <result column="MESSAGE" property="message" />
+    </resultMap>
+
+    <select id="searchTaskDefCount" parameterType="java.util.Map" resultType="java.lang.Integer">
+        SELECT COUNT(*) FROM P_TASK_RUN TASKRUN ,P_PROCESS_DEF PROCESS
+    	<where>
+    		TASKRUN.PROCESS_ID = PROCESS.PROCESS_ID
+    		<if test="processId != null and processId!=''">
+        		AND TASKRUN.PROCESS_ID = #{processId}
+        	</if>
+        	<if test="processName != null and processName!='' ">
+	        	AND PROCESS.PROCESS_NAME LIKE #{processName}
+	        </if>
+            <if test="taskStatus != null and taskStatus!='' ">
+            	AND TASK_STATUS = #{taskStatus}
+            </if>
+            <if test="execDate != null and execDate!='' ">
+                AND EXEC_DATE=STR_TO_DATE(#{execDate}, '%Y-%m-%d')
+            </if>
+    	</where>        
+    </select>
+
+    <select id="searchTaskDef" parameterType="java.util.Map" resultMap="taskDefMap">
+        SELECT TASKRUN.* FROM P_TASK_RUN TASKRUN,P_PROCESS_DEF PROCESS
+    	<where>
+    		TASKRUN.PROCESS_ID = PROCESS.PROCESS_ID
+    		<if test="processId != null and processId!=''">
+        		AND TASKRUN.PROCESS_ID = #{processId}
+        	</if>
+        	<if test="processName != null and processName!='' ">
+	        	AND PROCESS.PROCESS_NAME LIKE #{processName}
+	        </if>
+            <if test="taskStatus != null and taskStatus!='' ">
+            	AND TASK_STATUS = #{taskStatus}
+            </if>
+            <if test="execDate != null and execDate!='' ">
+                AND EXEC_DATE=STR_TO_DATE(#{execDate}, '%Y-%m-%d')
+            </if>
+	        <if test="orderBy != null and orderBy!='' ">
+	            ORDER BY ${orderBy}
+	            <if test="sord != null and sord!='' ">
+	                ${sord}
+	            </if>
+	        </if>
+	        <if test="start != null and start >= 0">
+	            LIMIT #{start}, #{offset}
+	        </if>	                    
+    	</where> 
+    </select>
+    
+	<select id="searchTaskOfProcessDef" parameterType="java.util.Map" resultMap="taskOfProcessDefMap">
+		SELECT
+			TASKRUN.TASK_ID,
+			TASKRUN.TASK_NAME,
+			TASKRUN.TASK_STATUS,
+			TASKRUN.TASK_TYPE,
+			DATE_FORMAT(
+				TASKRUN.EXEC_DATE,
+				'%Y-%m-%d'
+			)EXEC_DATE,
+			DATE_FORMAT(
+				TASKRUN.START_TIME,
+				'%Y-%m-%d %H:%i:%s'
+			)START_TIME,
+			DATE_FORMAT(
+				TASKRUN.END_TIME,
+				'%Y-%m-%d %H:%i:%s'
+			)END_TIME,
+			TASKRUN.RUN_TIME,
+			TASKRUN.REMEDY_TIMES,
+			substr(TASKRUN.MESSAGE, 1, 4000)MESSAGE,
+			PROCESS.PROCESS_ID,
+			PROCESS.PROCESS_NAME
+		FROM
+			P_TASK_RUN TASKRUN,
+			P_PROCESS_DEF PROCESS
+    	<where>
+    		TASKRUN.PROCESS_ID = PROCESS.PROCESS_ID
+    		<if test="processId != null and processId!=''">
+        		AND TASKRUN.PROCESS_ID = #{processId}
+        	</if>
+        	<if test="processName != null and processName!='' ">
+	        	AND PROCESS.PROCESS_NAME LIKE #{processName}
+	        </if>
+            <if test="taskStatus != null and taskStatus!='' ">
+            	AND TASK_STATUS = #{taskStatus}
+            </if>
+            <if test="execDate != null and execDate!='' ">
+                AND EXEC_DATE=STR_TO_DATE(#{execDate}, '%Y-%m-%d')
+            </if>
+	        <if test="orderBy != null and orderBy!='' ">
+	            ORDER BY ${orderBy}
+	            <if test="sord != null and sord!='' ">
+	                ${sord}
+	            </if>
+	        </if>
+	        <if test="start != null and start >= 0">
+	            LIMIT #{start}, #{offset}
+	        </if>	                    
+    	</where> 
+    </select>
+
+    <insert id="startTask" parameterType="java.util.Map">
+        INSERT INTO P_TASK_RUN
+        (process_id,
+        task_id,
+        task_name,
+        task_type,
+        exec_date,
+        start_time,
+        task_status)
+        VALUES
+        (#{processId},
+        #{taskId},
+        #{taskName},
+        #{taskType},
+        STR_TO_DATE(#{execDate}, '%Y-%m-%d'),
+        now(),
+        'R')
+        ON DUPLICATE KEY UPDATE start_time=now(), task_status='R',end_time=null,message=null,run_time=null
+	</insert>
+
+    <update id="terminateTask" parameterType="java.util.Map">
+        UPDATE P_TASK_RUN
+        SET task_status='S',
+        end_time=now(),
+        <include refid="computeRunTime" />,
+        message=null
+        WHERE
+        	task_id=#{taskId}
+        AND exec_date=STR_TO_DATE(#{execDate}, '%Y-%m-%d')
+	</update>
+
+    <update id="failedTask" parameterType="java.util.Map">
+        UPDATE P_TASK_RUN
+        SET task_status='F',
+        end_time=now(),
+        <include refid="computeRunTime" />,
+        message=#{detail}
+        WHERE task_id=#{taskId}
+        AND exec_date=STR_TO_DATE(#{execDate}, '%Y-%m-%d')
+    </update>   
+    
+    <update id="abortTask" parameterType="java.util.Map">
+        UPDATE P_TASK_RUN
+        SET task_status='C',
+        end_time=now(),
+        <include refid="computeRunTime" />,
+        WHERE task_id=#{taskId}
+        AND exec_date=STR_TO_DATE(#{execDate}, '%Y-%m-%d')
+    </update>    
+    
+    <delete id="deleteProcessTasks" parameterType="java.util.Map">
+        DELETE FROM P_TASK_RUN WHERE PROCESS_ID = #{processId} and exec_date=STR_TO_DATE(#{execDate}, '%Y-%m-%d')
+    </delete>  
+    
+	<select id="getFirstFailedTask" parameterType="java.util.Map" resultMap="taskDefMap">
+		SELECT
+			TASKRUN.TASK_ID,
+			TASKRUN.TASK_NAME,
+			TASKRUN.TASK_STATUS,
+			TASKRUN.TASK_TYPE,
+			DATE_FORMAT(
+				TASKRUN.EXEC_DATE,
+				'%Y-%m-%d'
+			)EXEC_DATE,
+			DATE_FORMAT(
+				TASKRUN.START_TIME,
+				'%Y-%m-%d %H:%i:%s'
+			)START_TIME,
+			DATE_FORMAT(
+				TASKRUN.END_TIME,
+				'%Y-%m-%d %H:%i:%s'
+			)END_TIME,
+			TASKRUN.REMEDY_TIMES,
+			substr(TASKRUN.MESSAGE, 1, 4000) MESSAGE,
+			PROCESS.PROCESS_ID,
+			PROCESS.PROCESS_NAME
+		FROM
+			P_TASK_RUN TASKRUN,
+			P_PROCESS_DEF PROCESS
+		WHERE
+			TASKRUN.PROCESS_ID = PROCESS.PROCESS_ID
+		AND TASKRUN.PROCESS_ID = #{processId}
+		AND EXEC_DATE = STR_TO_DATE(#{execDate}, '%Y-%m-%d')
+		AND TASK_STATUS = 'F'
+		ORDER BY
+			TASKRUN.START_TIME asc
+		LIMIT 1         
+    </select>           
+</mapper>

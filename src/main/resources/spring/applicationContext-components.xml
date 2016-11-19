@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns:mvc="http://www.springframework.org/schema/mvc" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.springframework.org/schema/beans"
+    xsi:schemaLocation="
+        http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc-3.0.xsd
+        http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
+
+    
+    <bean name="hdfsService" class="com.lenovo.lps.farseer.priest2.platform.service.impl.HdfsServiceImpl" />   
+    <bean name="mySQLService" class="com.lenovo.lps.farseer.priest2.platform.service.impl.MySQLServiceImpl" /> 
+    <bean name="oracleService" class="com.lenovo.lps.farseer.priest2.platform.service.impl.OracleServiceImpl" />  
+    <bean name="shellService" class="com.lenovo.lps.farseer.priest2.platform.service.impl.ShellServiceImpl" />  
+    <bean name="javaService" class="com.lenovo.lps.farseer.priest2.platform.service.impl.JavaServiceImpl" />
+    <bean name="cacheService" class="com.lenovo.lps.farseer.priest2.platform.service.impl.CacheServiceImpl" /> 
+    <bean name="dependentService" class="com.lenovo.lps.farseer.priest2.platform.service.impl.DependentServiceImpl" /> 
+    <bean name="dataTransferService" class="com.lenovo.lps.farseer.priest2.platform.service.impl.DataTransferServiceImpl" /> 
+	
+    <bean id="mySqlTaskHandler" class="com.lenovo.lps.farseer.priest2.platform.components.MySqlTaskHandler" />
+    <bean id="oracleTaskHandler" class="com.lenovo.lps.farseer.priest2.platform.components.OracleTaskHandler" />
+    <bean id="javaTaskHandler" class="com.lenovo.lps.farseer.priest2.platform.components.JavaTaskHandler" />
+    <bean id="shellTaskHandler" class="com.lenovo.lps.farseer.priest2.platform.components.ShellTaskHandler" />
+    <bean id="cacheTaskHandler" class="com.lenovo.lps.farseer.priest2.platform.components.CacheTaskHandler" />
+    <bean id="depTaskHandler" class="com.lenovo.lps.farseer.priest2.platform.components.DepTaskHandler" />
+    <bean id="hdfsTaskHandler" class="com.lenovo.lps.farseer.priest2.platform.components.HdfsTaskHandler" />
+	<bean id="dataTransferHandler" class="com.lenovo.lps.farseer.priest2.platform.components.DataTransferHandler" />  
+	<bean id="hiveTaskHandler" class="com.lenovo.lps.farseer.priest2.platform.components.HiveTaskHandler" />   
+	<bean id="mapReduceTaskHandler" class="com.lenovo.lps.farseer.priest2.platform.components.MapReduceTaskHandler" /> 
+	<bean id="notifyTaskHandler" class="com.lenovo.lps.farseer.priest2.platform.components.NotifyTaskHandler" /> 
+	<bean id="sparkSqlTaskHandler" class="com.lenovo.lps.farseer.priest2.platform.components.SparkSqlTaskHandler" /> 
+	<bean id="sparkJarTaskHandler" class="com.lenovo.lps.farseer.priest2.platform.components.SparkJarTaskHandler" /> 
+	
+</beans>

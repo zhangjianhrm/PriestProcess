@@ -1,0 +1,290 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.lenovo.lps.farseer.priest2.platform.mapper.ApplicationMapper">   
+	<resultMap type="AppEntity" id="appMap">
+		<result column="APP_ID" property="appId" jdbcType="INTEGER" javaType="String"/>
+		<result column="APP_NAME" property="appName" jdbcType="VARCHAR" javaType="String"/>
+		<result column="APP_DESC" property="appDesc" jdbcType="VARCHAR" javaType="String"/>
+		<result column="APP_VARIABLES" property="appVars" jdbcType="VARCHAR" javaType="String"/>
+		<result column="APP_USER" property="appUser" jdbcType="VARCHAR" javaType="String"/>
+		<result column="thread_pool_id" property="threadPoolId" jdbcType="INTEGER" javaType="INTEGER"/>
+	</resultMap>
+ 
+    <select id="selectApp" resultMap="appMap" >
+        SELECT app_id ,app_name, thread_pool_id, app_user FROM P_APPLICATION
+    </select>
+    
+    <select id="getAppId" parameterType="string" resultType="int">
+    	SELECT app_id from P_APPLICATION WHERE app_name = #{appName}
+    </select>
+    
+    <select id="getAppInfo" parameterType="int" resultType="hashmap">
+    	SELECT
+			app_id appId,
+			app_name appName,
+			app_variables appVariables,
+			app_user appUser,
+			thread_pool_id threadPoolId
+		FROM
+			P_APPLICATION
+		WHERE
+			app_id = #{appId}
+    </select>
+    
+    <select id="getAppDbConfig" parameterType="com.lenovo.lps.farseer.priest2.platform.entity.DbEntity" resultType="com.lenovo.lps.farseer.priest2.platform.entity.DbEntity">
+	    SELECT
+	    	db.app_id appId,
+	    	db.db_user userName,
+			db.db_pass password,
+			db.db_url url,
+			db.db_driver driverClassName,
+			db.db_type dbType,
+			db.db_name dbName,
+			db.ip,
+			db.port,
+			db.real_db_name realDbName,
+			db.connect_type connectType,
+			db.service_name serviceName,
+			db.failover,
+			db.load_balance loadBalance,
+			app.app_name appName
+		FROM
+			P_DATABASE db
+		JOIN P_APPLICATION app
+		ON  db.app_id=app.app_id
+		WHERE
+		    db.db_type in (1, 2)
+		<if test="appId != null and appId != ''">
+	         AND db.app_id = #{appId}
+		</if>
+		<if test="appIds != null and appIds != ''">
+	         AND db.app_id in ${appIds}
+		</if>	
+		<if test="driverClassName != null and driverClassName != ''">
+	         AND db_driver = #{driverClassName}
+		</if>
+		<if test="userName != null and userName != ''">
+	         AND db_user like concat('%', #{userName}, '%')
+		</if>
+		<if test="url != null and url != ''">
+	         AND db_url like concat('%', #{url}, '%')
+		</if>	
+		<if test="dbType != null and dbType != ''">
+	         AND db_type = #{dbType}
+		</if>
+		<if test="dbName != null and dbName != ''">
+	         AND db_name like concat('%', #{dbName}, '%')
+		</if>
+		<if test="sidx != null and sidx != ''">
+	          ORDER BY ${sidx}
+	          <if test="sord != null and sord != ''">
+	              ${sord}
+	          </if>
+		</if>										      
+    </select>
+    
+    <update id="updateAppVariables" parameterType="java.util.HashMap">
+        UPDATE P_APPLICATION
+        	SET app_variables = #{appVariables}
+        WHERE 
+        	app_id = #{appID}
+    </update>
+    
+    <select id="getAppInfos" parameterType="AppEntity" resultMap="appMap" >
+		SELECT
+			   app.app_id, app_name, app_desc, app_variables,app_user,thread_pool_id
+		FROM P_APPLICATION app
+		<if test="sidx != null and sidx != ''">
+	          ORDER BY ${sidx}
+	          <if test="sord != null and sord != ''">
+	              ${sord}
+	          </if>
+		</if>
+    </select>
+    
+    <insert id="addAppInfo" useGeneratedKeys="true" keyProperty="appId" parameterType="AppEntity">
+    	INSERT INTO P_APPLICATION
+    		(app_name,
+			 app_desc,
+			 app_variables,
+			 app_user,
+			 thread_pool_id
+			 )
+		VALUES
+			(#{appName},
+			 #{appDesc},
+			 #{appVars},
+			 #{appUser},
+			 #{threadPoolId}
+			) 
+    </insert>
+    
+    <insert id="addAppDbConfig" parameterType="com.lenovo.lps.farseer.priest2.platform.entity.DbEntity">
+    	INSERT INTO P_DATABASE
+    	 	(app_id,
+    	 	 db_user,
+			 db_pass,
+			 db_url,
+			 db_driver,
+			 db_name,
+			 db_type,
+			 ip,
+			 `port`,
+			 real_db_name,
+			 connect_type,
+			 service_name,
+			 failover,
+			 load_balance
+			 )
+		VALUES
+			(#{appId},
+			 #{userName},
+			 #{password},
+			 #{url},
+			 #{driverClassName},
+			 #{dbName},
+			 #{dbType},
+			 #{ip},
+			 #{port},
+			 #{realDbName},
+			 #{connectType},
+			 #{serviceName},
+			 #{failover},
+			 #{loadBalance}
+			 )
+    </insert>
+    
+    <update id="updateAppInfo" parameterType="AppEntity">
+    	UPDATE P_APPLICATION
+    	   SET app_name = ifnull(#{appName}, app_name),
+    	       app_desc = ifnull(#{appDesc}, app_desc),
+			   app_variables = ifnull(#{appVars}, app_variables),
+			   app_user = ifnull(#{appUser}, app_user),
+			   thread_pool_id = ifnull(#{threadPoolId}, thread_pool_id)
+		 WHERE app_id = #{appId}
+    </update>
+    
+    <update id="updateAppDbConfig" parameterType="com.lenovo.lps.farseer.priest2.platform.entity.DbEntity">
+    	UPDATE P_DATABASE
+    	   SET db_user = ifnull(#{userName}, db_user),
+    	   <if test="password != null and password != ''">
+    	   		db_pass = ifnull(#{password}, db_pass),
+    	   </if>
+			   db_url = ifnull(#{url}, db_url),
+			   ip = ifnull(#{ip}, ip),
+			   `port` = ifnull(#{port}, `port`),
+			   real_db_name = ifnull(#{realDbName}, real_db_name),
+			   connect_type = ifnull(#{connectType}, connect_type),
+			   service_name = ifnull(#{serviceName}, service_name),
+			   failover = ifnull(#{failover}, failover),
+			   load_balance = ifnull(#{loadBalance}, load_balance)
+		 WHERE app_id = #{appId}
+		   AND db_type = #{dbType}
+		   AND db_name = #{dbName}
+    </update>
+    
+    <select id="getAppUser" parameterType="int" resultType="string">
+    	SELECT app_user FROM P_APPLICATION where APP_ID=#{appId}
+    </select>
+     <insert id="addSysMap" parameterType="map">
+	    	INSERT INTO P_SYS_MAP
+	    	 	(`key`,
+	    	 	 `value`
+				 )
+			VALUES
+				(#{key},
+				 #{value}
+				 )
+			 ON DUPLICATE KEY UPDATE `value` = #{value}
+	    </insert>
+	     <select id="getSysMap" parameterType="String" resultType="com.lenovo.lps.farseer.priest2.platform.entity.SysMapEntity">
+		    SELECT
+		    	`key`, `value`
+			FROM
+				P_SYS_MAP
+			WHERE
+			    1=1   
+			<if test="key != null and key != ''">
+		         AND `key` = #{key}
+			</if>	
+	    </select>
+     <insert id="addSysConfig" parameterType="com.lenovo.lps.farseer.priest2.platform.entity.SysConfigEntity">
+	    	INSERT INTO P_SYS_CONFIG
+	    	 	(priority,
+	    	 	 type,
+				 url,
+				 `user`,
+				 passwd,
+				 target,
+				 ip,
+				 `port`,
+				 db_name,
+				 principal
+				 )
+			VALUES
+				(#{priority},
+				 #{type},
+				 #{url},
+				 #{user},
+				 #{passwd},
+				 #{target},
+				 #{ip},
+				 #{port},
+				 #{dbName},
+				 #{principal}
+				 )
+			 ON DUPLICATE KEY UPDATE url = ifnull(#{url}, url),
+					    	       target = ifnull(#{target}, target),
+						    	   <if test="passwd != null and passwd != ''">
+						    	   		passwd = ifnull(#{passwd}, passwd),
+						    	   </if>
+								   `user` = ifnull(#{user}, `user`),
+								   ip = ifnull(#{ip}, ip),
+								   `port` = ifnull(#{port}, `port`),
+								   db_name = ifnull(#{dbName}, db_name),
+								   principal = ifnull(#{principal}, principal)
+	    </insert>
+    <select id="getMaxPriority" parameterType="com.lenovo.lps.farseer.priest2.platform.entity.SysConfigEntity" resultType="int">
+    	select ifnull(max(priority), 0) priority from  P_SYS_CONFIG
+		 WHERE type = #{type}
+    </select>
+    <update id="delSysConfig" parameterType="com.lenovo.lps.farseer.priest2.platform.entity.SysConfigEntity">
+    	DELETE FROM P_SYS_CONFIG
+		   WHERE priority = #{priority}
+		   AND type = #{type};
+		<if test="priority != null and priority != '' and priority != '0'">
+			UPDATE  P_SYS_CONFIG set priority = priority - 1
+				where priority > #{priority}
+				   AND type = #{type};
+		</if>
+    </update>
+    <select id="getSysConfig" parameterType="com.lenovo.lps.farseer.priest2.platform.entity.SysConfigEntity" resultType="com.lenovo.lps.farseer.priest2.platform.entity.SysConfigEntity">
+		    SELECT
+		    	priority,
+	    	 	 type,
+				 url,
+				 `user`,
+				 passwd,
+				 target,
+				 ip,
+				 `port`,
+				 db_name dbName,
+				 principal
+			FROM
+				P_SYS_CONFIG
+			WHERE
+			    1=1   
+			<if test="priority != null and priority != ''">
+		         AND priority = #{priority}
+			</if>	
+			<if test="type != null and type != ''">
+		         AND type = #{type}
+			</if>
+			<if test="url != null and url != ''">
+		         AND db_url LIKE #{url}
+			</if>	
+			<if test="user != null and user != ''">
+		         AND `user` = #{user}
+			</if>
+	    </select>
+</mapper>

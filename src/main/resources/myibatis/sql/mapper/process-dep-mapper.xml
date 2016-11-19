@@ -1,0 +1,207 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.lenovo.lps.farseer.priest2.platform.mapper.ProcessDepMapper">
+ <sql id="getWhereCondition">
+        <trim prefix="WHERE" prefixOverrides="AND|OR"> 
+        	<if test="processId != null and processId!=''">
+        	    AND processRun.PROCESS_ID = #{processId}
+        	</if>
+        	<if test="processName != null and processName !=''">
+	        	AND	processRun.PROCESS_NAME LIKE #{processName}
+        	</if>
+        	<if test="processStatus != null and processStatus !=''">
+	        	AND	processRun.PROCESS_STATUS LIKE #{processStatus}
+        	</if>
+            <if test="createdBy != null and createdBy !=''">
+        		AND processRun.created_by = #{createdBy}
+        	</if>            
+        	<if test="scheduleDate != null and scheduleDate !=''">
+        		AND  processRun.SCHEDULE_DATE = STR_TO_DATE(#{scheduleDate}, '%Y-%m-%d')
+        	</if>  
+        	<if test="processApp != null and processApp != ''">
+        		AND processRun.PROCESS_APP = #{processApp}
+        	</if> 
+        	<if test="processType != null and processType != ''">
+        		AND processRun.PROCESS_TYPE = #{processType}
+        	</if>
+        	<if test="execDate != null and execDate != ''">
+        		AND processRun.EXEC_DATE = STR_TO_DATE(#{execDate}, '%Y-%m-%d')
+        	</if> 
+        </trim>
+    </sql>
+    <resultMap type="com.lenovo.lps.farseer.priest2.platform.entity.ProcessEntity" id="processDepMap">
+        <result column="process_id" property="processId" jdbcType="INTEGER" javaType="Integer"/>
+        <result column="exec_date" property="execDate" jdbcType="VARCHAR" javaType="String"/>
+        <result column="start_time" property="startTime" jdbcType="VARCHAR" javaType="String"/>
+        <result column="end_time" property="endTime" jdbcType="VARCHAR" javaType="String"/>
+        <result column="run_time" property="runTime" jdbcType="INTEGER" javaType="Integer"/>
+        <result column="message" property="message" jdbcType="VARCHAR" javaType="String"/>
+        <result column="process_status" property="processStatus" jdbcType="CHAR" javaType="String"/>
+        <result column="remedy_times" property="remedyTimes" jdbcType="INTEGER" javaType="Integer"/>
+        <result column="latest_schedule_time" property="latestScheduleTime" jdbcType="VARCHAR" javaType="String"/>
+        <result column="schedule_time" property="scheduleTime" jdbcType="VARCHAR" javaType="String"/>
+        <result column="process_priority" property="processPriority" jdbcType="CHAR" javaType="String"/>
+        <result column="process_name" property="processName" jdbcType="VARCHAR" javaType="String"/>
+        <result column="dependent_process_id" property="depProcessId" jdbcType="INTEGER" javaType="Integer"/>  
+        <result column="schedule_date" property="scheduleDate" jdbcType="VARCHAR" javaType="String"/>
+        <result column="created_by" property="createdBy" jdbcType="VARCHAR" javaType="String"/>
+        <result column="process_type" property="processType" jdbcType="CHAR" javaType="String"/>
+        <result column="process_app" property="processApp" jdbcType="VARCHAR" javaType="String"/>
+    </resultMap>
+    
+    <!-- insert  -->
+	<insert id="insertDeps" parameterType="com.lenovo.lps.farseer.priest2.platform.entity.ProcessDependentEntity">
+	    INSERT INTO P_PROCESS_DEP
+	      (id, process_id, dependent_process_id)
+	    VALUES
+	    <foreach collection="list" item="parm" index="index" open="" close="" separator=",">
+	      (null,
+	       #{parm.processId},
+	       #{parm.dependentProcessId})
+	    </foreach>		    
+	</insert>
+	
+	<delete id="deleteDep" parameterType="java.lang.Integer">
+	    DELETE FROM  P_PROCESS_DEP where process_id=#{processId}
+	</delete>	
+	
+   <select id="getProcessRunCount" parameterType="com.lenovo.lps.farseer.priest2.platform.entity.ProcessEntity" resultType="java.lang.Long">
+        SELECT COUNT(*) FROM P_PROCESS_RUN processRun
+        <include refid="getWhereCondition"/>
+    </select>
+    
+    <select id="getProcessRuns" parameterType="com.lenovo.lps.farseer.priest2.platform.entity.ProcessEntity" resultMap="processDepMap">
+    	SELECT 
+    		processRun.process_id,
+		    DATE_FORMAT(
+		        processRun.exec_date,
+		        '%Y-%m-%d'
+		    ) exec_date,
+		    DATE_FORMAT(
+		        processRun.start_time,
+		        '%Y-%m-%d %H:%i:%s'
+		    ) start_time,
+		    DATE_FORMAT(
+		        processRun.end_time,
+		        '%Y-%m-%d %H:%i:%s'
+		    ) end_time,
+		    processRun.run_time,
+		    substr(processRun.message,1,4000) message,
+		    processRun.process_status,
+		    processRun.remedy_times,
+		    DATE_FORMAT(
+		        processRun.latest_schedule_time,
+		        '%H:%i:%s'
+		    ) latest_schedule_time,
+		    DATE_FORMAT(
+		        processRun.schedule_time,
+		        '%H:%i:%s'
+		    ) schedule_time,
+		    processRun.process_priority,
+		    processRun.process_name,
+		    processRun.created_by,
+		    processRun.SCHEDULE_DATE,
+		    app.app_name process_app
+    	FROM P_PROCESS_RUN processRun JOIN P_APPLICATION app 
+    	 ON  processRun.process_app=app.app_id
+    	<include refid="getWhereCondition"/>
+        <if test="sidx != null and sidx !='' ">
+            ORDER BY ${sidx}
+            <if test="sord != null and sord != '' ">
+                ${sord}
+            </if>
+        </if>	
+        <if test="offset != null and offset >= 0">
+            LIMIT #{offset}, #{rows}
+        </if>
+    </select>
+    
+    <select id="getProcessFails" parameterType="com.lenovo.lps.farseer.priest2.platform.entity.ProcessEntity" resultMap="processDepMap">
+    	SELECT 
+    		processRun.process_id,
+		    DATE_FORMAT(
+		        processRun.exec_date,
+		        '%Y-%m-%d'
+		    ) exec_date,
+		    DATE_FORMAT(
+		        processRun.start_time,
+		        '%Y-%m-%d %H:%i:%s'
+		    ) start_time,
+		    DATE_FORMAT(
+		        processRun.end_time,
+		        '%Y-%m-%d %H:%i:%s'
+		    ) end_time,
+		    processRun.run_time,
+		    substr(processRun.message,1,4000) message,
+		    processRun.process_status,
+		    processRun.remedy_times,
+		    DATE_FORMAT(
+		        processRun.latest_schedule_time,
+		        '%H:%i:%s'
+		    ) latest_schedule_time,
+		    DATE_FORMAT(
+		        processRun.schedule_time,
+		        '%H:%i:%s'
+		    ) schedule_time,
+		    processRun.process_priority,
+		    processRun.process_name,
+		    processRun.created_by,
+		    processRun.SCHEDULE_DATE,
+		    app.app_name process_app
+    	FROM P_PROCESS_RUN processRun JOIN P_APPLICATION app 
+    	 ON  processRun.process_app=app.app_id
+    	<include refid="getWhereCondition"/>
+    	AND processRun.PROCESS_STATUS = 'F'
+    </select>
+   
+    <select id="getProcessRunsIncDepId" parameterType="com.lenovo.lps.farseer.priest2.platform.entity.ProcessEntity"  resultMap="processDepMap">
+		SELECT
+		    processRun.process_id,
+		    DATE_FORMAT(
+		        processRun.exec_date,
+		        '%Y-%m-%d'
+		    ) exec_date,
+		    DATE_FORMAT(
+		        processRun.start_time,
+		        '%Y-%m-%d %H:%i:%s'
+		    ) start_time,
+		    DATE_FORMAT(
+		        processRun.end_time,
+		        '%Y-%m-%d %H:%i:%s'
+		    ) end_time,
+		    processRun.run_time,
+		    substr(processRun.message,1,4000) message,
+		    processRun.process_status,
+		    processRun.remedy_times,
+		    DATE_FORMAT(
+		        processRun.latest_schedule_time,
+		        '%H:%i:%s'
+		    ) latest_schedule_time,
+		    DATE_FORMAT(
+		        processRun.schedule_time,
+		        '%H:%i:%s'
+		    ) schedule_time,
+		    processRun.process_priority,
+		    processRun.process_name,
+		    dep.dependent_process_id dependent_process_id,
+		    processRun.SCHEDULE_DATE
+		FROM
+		    P_PROCESS_RUN processRun
+		LEFT JOIN P_PROCESS_DEP dep ON processRun.PROCESS_ID = dep.process_id
+		<include refid="getWhereCondition"/>
+		<if test="sidx != null and sidx !='' ">
+            ORDER BY ${sidx}
+            <if test="sord != null and sord != '' ">
+                ${sord}
+            </if>
+        </if>
+    </select>    
+    
+	<select id="getProcessChildrenIds" parameterType="java.lang.Integer" resultMap="processDepMap">
+	 	SELECT d.* FROM P_PROCESS_DEP d join P_PROCESS_DEF p on d.dependent_process_id = #{dependentProcessId} and p.process_id = d.process_id and p.process_state != 'D'
+    </select>
+    
+    <select id="getProcessParentsIds" parameterType="java.lang.Integer" resultMap="processDepMap">
+    	SELECT d.* FROM P_PROCESS_DEP d join P_PROCESS_DEF p on d.process_id = #{processId} and p.process_id = d.dependent_process_id and p.process_state != 'D'
+    </select>
+</mapper>

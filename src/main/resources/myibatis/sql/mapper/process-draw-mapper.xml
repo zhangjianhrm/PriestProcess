@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.lenovo.lps.farseer.priest2.platform.mapper.ProcessDrawMapper" >
+   <select id="getProcessRunsIncDepId" parameterType="map"  resultType="com.lenovo.lps.farseer.priest2.platform.entity.ProcessDependDraw">
+	SELECT
+	    processRun.process_id processId,
+	    DATE_FORMAT(
+	        processRun.exec_date,
+	        '%Y-%m-%d'
+	    ) execDate,
+	    processRun.process_status processStatus,
+	    processRun.process_name processName,
+	    dep.dependent_process_id  depProcessId
+	FROM
+	    P_PROCESS_RUN processRun
+		LEFT JOIN P_PROCESS_DEP dep ON processRun.PROCESS_ID = dep.process_id
+	where 1=1
+	<if test="appIds != null and appIds != ''">
+  		AND processRun.PROCESS_APP in ${appIds}
+  	</if>
+   	<if test="execDate != null and execDate != ''">
+   		AND processRun.EXEC_DATE = STR_TO_DATE(#{execDate}, '%Y-%m-%d')
+   	</if>
+   	order by processRun.START_TIME
+   </select> 
+      
+   <select id="getProcessIncDepId" parameterType="map"  resultType="com.lenovo.lps.farseer.priest2.platform.entity.ProcessDependDraw">
+	SELECT
+	    p.process_id processId,
+	    DATE_FORMAT(
+	        ifnull(pr.exec_date, #{execDate}),
+	        '%Y-%m-%d'
+	    ) execDate,
+	    p.process_name processName,
+	    p.schedule_type scheduleType,
+	    ifnull(pr.process_status, "") processStatus,
+	    dep.dependent_process_id depProcessId
+	FROM
+	    P_PROCESS_DEF p
+	    left outer join P_PROCESS_RUN pr on pr.process_id = p.process_id and pr.EXEC_DATE = STR_TO_DATE(#{execDate}, '%Y-%m-%d')
+	LEFT JOIN P_PROCESS_DEP dep ON p.PROCESS_ID = dep.process_id 
+	where p.schedule_type != 'O' and p.process_state = 'N'
+	<if test="appIds != null and appIds != ''">
+  		and p.PROCESS_APP in ${appIds}
+  	</if>
+  	order by p.created_date
+   </select> 
+</mapper>

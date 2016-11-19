@@ -1,0 +1,61 @@
+/*query report style*/
+#loading{
+	font-size : 150%;
+	float : left;
+}
+#menu{
+	margin-right: 40px;
+	float : right;
+}
+#menu input{
+	float : left;
+	margin-left:20px;
+}
+#clear{
+	clear: both;
+}
+#charttype{
+	display: none;
+}
+#charttype span{
+	margin-left: 20px;
+}
+#charttabs div{
+	width: 100%;
+	min-height: 600px;
+}
+#propsEditor{
+	display: none;
+}
+#propsEditor table {
+	font-size:11px;
+	color:#333333;
+	border-width: 1px;
+	border-color: #666666;
+	border-collapse: collapse;
+}
+#propsEditor table th {
+	border-width: 1px;
+	padding: 8px;
+	border-style: solid;
+	border-color: #666666;
+	background-color: #dedede;
+	text-align: center;
+	width: 100px;
+}
+#propsEditor table td {
+	border-width: 1px;
+	padding: 8px;
+	border-style: solid;
+	border-color: #666666;
+	background-color: #ffffff;
+	text-align: center;
+	width: 100px;
+}
+#queryFlag, #xAxis{
+	width: 142px;
+	height: 18px;
+}
+#yAxis{
+	width: 142px;
+}
